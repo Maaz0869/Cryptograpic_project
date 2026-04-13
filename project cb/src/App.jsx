@@ -327,7 +327,7 @@ function App() {
   const inputLength = currentText.length;
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-8 flex flex-col items-center relative">
+    <div className="min-h-screen bg-slate-900 text-white px-4 py-6 sm:px-6 sm:py-8 lg:px-8 flex flex-col items-center relative">
       {toast.show && (
         <div
           className={`fixed top-5 right-5 px-4 py-2 rounded-lg shadow-lg border z-50 text-sm font-medium ${
@@ -342,21 +342,21 @@ function App() {
         </div>
       )}
 
-      <div className="flex items-center gap-3 mb-8">
-        <ShieldCheck size={40} className="text-blue-400" />
-        <h1 className="text-3xl font-bold tracking-tight">
+      <div className="flex flex-col sm:flex-row items-center gap-3 mb-6 sm:mb-8 text-center sm:text-left">
+        <ShieldCheck size={40} className="text-blue-400 shrink-0" />
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
           Cyber Security: AES Tool
         </h1>
       </div>
 
-      <div className="w-full max-w-2xl bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
+      <div className="w-full max-w-2xl bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-xl border border-slate-700">
         <div className="flex mb-6 bg-slate-900 p-1 rounded-lg">
           <button
             onClick={() => {
               setMode("encrypt");
               setResult("");
             }}
-            className={`flex-1 py-2 rounded-md flex items-center justify-center gap-2 transition ${mode === "encrypt" ? "bg-blue-600 text-white" : "text-slate-400"}`}
+            className={`flex-1 py-2 rounded-md flex items-center justify-center gap-2 transition text-sm sm:text-base ${mode === "encrypt" ? "bg-blue-600 text-white" : "text-slate-400"}`}
           >
             <Lock size={18} /> Encrypt
           </button>
@@ -365,7 +365,7 @@ function App() {
               setMode("decrypt");
               setResult("");
             }}
-            className={`flex-1 py-2 rounded-md flex items-center justify-center gap-2 transition ${mode === "decrypt" ? "bg-green-600 text-white" : "text-slate-400"}`}
+            className={`flex-1 py-2 rounded-md flex items-center justify-center gap-2 transition text-sm sm:text-base ${mode === "decrypt" ? "bg-green-600 text-white" : "text-slate-400"}`}
           >
             <Unlock size={18} /> Decrypt
           </button>
@@ -382,7 +382,7 @@ function App() {
               value={currentText}
               onChange={(e) => setInputForMode(mode, e.target.value)}
               onKeyDown={handleInputKeyDown}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none h-24"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none h-28 sm:h-24 text-sm sm:text-base"
               placeholder={
                 mode === "encrypt"
                   ? "Enter secret message..."
@@ -400,29 +400,31 @@ function App() {
                 Secret Key (Password)
               </label>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type={showSecret ? "text" : "password"}
                 value={secretKey}
                 onChange={(e) => setSecretKey(e.target.value)}
-                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm sm:text-base"
                 placeholder="Keep this key safe!"
               />
-              <button
-                onClick={() => setShowSecret((prev) => !prev)}
-                className="px-3 bg-slate-700 rounded-lg hover:bg-slate-600"
-                title={showSecret ? "Hide key" : "Show key"}
-                aria-label={showSecret ? "Hide secret key" : "Show secret key"}
-              >
-                {showSecret ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-              <button
-                onClick={generateSecretKey}
-                className="px-3 bg-slate-700 rounded-lg hover:bg-slate-600 text-xs font-semibold"
-                title="Generate a secure random key"
-              >
-                Generate
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowSecret((prev) => !prev)}
+                  className="flex-1 sm:flex-none px-3 py-3 bg-slate-700 rounded-lg hover:bg-slate-600"
+                  title={showSecret ? "Hide key" : "Show key"}
+                  aria-label={showSecret ? "Hide secret key" : "Show secret key"}
+                >
+                  {showSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+                <button
+                  onClick={generateSecretKey}
+                  className="flex-1 sm:flex-none px-3 py-3 bg-slate-700 rounded-lg hover:bg-slate-600 text-xs font-semibold"
+                  title="Generate a secure random key"
+                >
+                  Generate
+                </button>
+              </div>
             </div>
             <div className="mt-2">
               <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
@@ -438,17 +440,17 @@ function App() {
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleProcess}
               disabled={!currentText.trim() || !secretKey.trim()}
-              className={`flex-1 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 ${mode === "encrypt" ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}`}
+              className={`flex-1 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-sm sm:text-base ${mode === "encrypt" ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}`}
             >
               {mode === "encrypt" ? "Generate Cipher" : "Reveal Message"}
             </button>
             <button
               onClick={() => copyToClipboard(currentText, "input")}
-              className="p-3 bg-slate-700 rounded-lg hover:bg-slate-600"
+              className="p-3 bg-slate-700 rounded-lg hover:bg-slate-600 self-start sm:self-auto"
               title="Copy input"
               aria-label="Copy input text"
             >
@@ -460,7 +462,7 @@ function App() {
             </button>
             <button
               onClick={clearAll}
-              className="p-3 bg-slate-700 rounded-lg hover:bg-slate-600"
+              className="p-3 bg-slate-700 rounded-lg hover:bg-slate-600 self-start sm:self-auto"
               aria-label="Clear all fields"
             >
               <RefreshCw size={20} />
@@ -470,11 +472,11 @@ function App() {
 
         {result && (
           <div className="mt-8 p-4 bg-slate-900 rounded-lg border border-dashed border-slate-600">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
               <p className="text-xs uppercase font-bold text-slate-500">
                 Result:
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={useResultAsInput}
                   className="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600"
@@ -503,12 +505,12 @@ function App() {
       </div>
 
       <div className="w-full max-w-2xl mt-6 bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div className="flex items-center gap-2">
             <History size={18} className="text-slate-300" />
             <h2 className="text-lg font-semibold">Recent Activity</h2>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={exportHistory}
               disabled={history.length === 0}
@@ -606,7 +608,7 @@ function App() {
         on this device.
       </p>
 
-      <p className="mt-6 text-slate-500 text-sm italic">
+      <p className="mt-6 text-slate-500 text-sm italic text-center px-2">
         Tip: Press Ctrl+Enter in input box to run quickly.
       </p>
     </div>
