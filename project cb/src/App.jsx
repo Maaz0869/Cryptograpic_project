@@ -24,6 +24,8 @@ function App() {
   const [result, setResult] = useState("");
   const [mode, setMode] = useState("encrypt");
   const [now, setNow] = useState(Date.now());
+  const [failedDecryptAttempts, setFailedDecryptAttempts] = useState(0);
+  const [decryptLockedUntil, setDecryptLockedUntil] = useState(0);
   const [copiedField, setCopiedField] = useState("");
   const [showSecret, setShowSecret] = useState(false);
   const [importError, setImportError] = useState("");
@@ -57,6 +59,25 @@ function App() {
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!decryptLockedUntil) return undefined;
+
+    if (now >= decryptLockedUntil) {
+      setDecryptLockedUntil(0);
+      setFailedDecryptAttempts(0);
+      showToast("Decrypt lock cleared", "info");
+      return undefined;
+    }
+
+    const timeout = setTimeout(() => {
+      setDecryptLockedUntil(0);
+      setFailedDecryptAttempts(0);
+      showToast("Decrypt lock cleared", "info");
+    }, decryptLockedUntil - now);
+
+    return () => clearTimeout(timeout);
+  }, [decryptLockedUntil, now]);
 
   useEffect(() => {
     try {
@@ -145,6 +166,11 @@ function App() {
   };
 
   const keyStrength = getKeyStrength(secretKey);
+  const decryptLockRemainingSeconds = Math.max(
+    0,
+    Math.ceil((decryptLockedUntil - now) / 1000),
+  );
+  const isDecryptLocked = decryptLockedUntil > now;
 
   const removeHistoryItem = (id) => {
     setHistory((prev) => prev.filter((item) => item.id !== id));
@@ -262,6 +288,14 @@ function App() {
       return;
     }
 
+    if (mode === "decrypt" && isDecryptLocked) {
+      showToast(
+        `Decrypt locked for ${decryptLockRemainingSeconds}s after 3 failed attempts`,
+        "error",
+      );
+      return;
+    }
+
     try {
       if (mode === "encrypt") {
         const encrypted = CryptoJS.AES.encrypt(
@@ -286,12 +320,37 @@ function App() {
         const decrypted = bytes.toString(CryptoJS.enc.Utf8);
 
         if (!decrypted) throw new Error("Decryption failed");
+        setFailedDecryptAttempts(0);
+        setDecryptLockedUntil(0);
         setResult(decrypted);
         addToHistory("decrypt", currentText, decrypted);
         showToast("Message decrypted successfully", "success");
       }
     } catch {
-      showToast("Invalid key or corrupted data!", "error");
+      if (mode === "decrypt") {
+        setFailedDecryptAttempts((prev) => {
+          const nextAttempts = prev + 1;
+
+          if (nextAttempts >= 3) {
+            setDecryptLockedUntil(Date.now() + 120000);
+            showToast(
+              "Too many failed attempts. Decrypt locked for 2 minutes.",
+              "error",
+            );
+            return 3;
+          }
+
+          showToast(
+            `Invalid key or corrupted data! Attempt ${nextAttempts}/3`,
+            "error",
+          );
+
+          return nextAttempts;
+        });
+      } else {
+        showToast("Invalid key or corrupted data!", "error");
+      }
+
       setResult("");
     }
   };
@@ -300,6 +359,8 @@ function App() {
     setModeInputs({ encrypt: "", decrypt: "" });
     setSecretKey("");
     setResult("");
+    setFailedDecryptAttempts(0);
+    setDecryptLockedUntil(0);
     showToast("Inputs cleared", "info");
   };
 
@@ -413,7 +474,9 @@ function App() {
                   onClick={() => setShowSecret((prev) => !prev)}
                   className="flex-1 sm:flex-none px-3 py-3 bg-slate-700 rounded-lg hover:bg-slate-600"
                   title={showSecret ? "Hide key" : "Show key"}
-                  aria-label={showSecret ? "Hide secret key" : "Show secret key"}
+                  aria-label={
+                    showSecret ? "Hide secret key" : "Show secret key"
+                  }
                 >
                   {showSecret ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -437,16 +500,34 @@ function App() {
                   style={{ width: keyStrength.width }}
                 />
               </div>
+              {mode === "decrypt" && failedDecryptAttempts > 0 && (
+                <p className="mt-2 text-xs text-amber-300">
+                  Failed attempts: {failedDecryptAttempts}/3
+                </p>
+              )}
+              {mode === "decrypt" && isDecryptLocked && (
+                <p className="mt-1 text-xs text-rose-300">
+                  Decrypt locked for {decryptLockRemainingSeconds}s.
+                </p>
+              )}
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleProcess}
-              disabled={!currentText.trim() || !secretKey.trim()}
+              disabled={
+                !currentText.trim() ||
+                !secretKey.trim() ||
+                (mode === "decrypt" && isDecryptLocked)
+              }
               className={`flex-1 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-sm sm:text-base ${mode === "encrypt" ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}`}
             >
-              {mode === "encrypt" ? "Generate Cipher" : "Reveal Message"}
+              {mode === "encrypt"
+                ? "Generate Cipher"
+                : isDecryptLocked
+                  ? `Locked (${decryptLockRemainingSeconds}s)`
+                  : "Reveal Message"}
             </button>
             <button
               onClick={() => copyToClipboard(currentText, "input")}
